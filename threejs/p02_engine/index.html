@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>WebGL Basics</title>
+        <link rel="icon" href="data:,">
+        <link rel="stylesheet" href="index.css">
+    </head>
+    <body>
+        <div id="canvas-wrapper">
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div class="stats">
+            <h2>Stats</h2>
+            <p>Camera: <span id="camera-coordinates"></span></p>
+            <p>Light: <span id="light-coordinates"></span></p>
+        </div>
+
+        <div class="legend">
+            <h2>Legend</h2>
+            <p>W: forward</p>
+            <p>S: backward</p>
+            <p>A: left</p>
+            <p>D: right</p>
+
+            <p>Space: up</p>
+            <p>C: down</p>
+
+            <p>Num 8: light forward</p>
+            <p>Num 2: light backward</p>
+
+            <p>Num 4: light left</p>
+            <p>Num 6: light right</p>
+
+            <p>Num 7: light up</p>
+            <p>Num 9: light down</p>
+        </div>
+
+        <script
+            src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
+
+        <script type="text/javascript" src="keyboardjs.min.js"></script>
+        <script type="text/javascript" src="three.js"></script>
+        <script type="text/javascript" src="index.js"></script>
+    </body>
+</html>
