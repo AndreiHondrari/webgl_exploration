@@ -53,6 +53,7 @@ class SceneState {
     }
 }
 
+
 class AnimationEngine {
     constructor(canvas, size) {
         this._scene = new THREE.Scene();
@@ -70,7 +71,10 @@ class AnimationEngine {
         this._light = new THREE.PointLight(0xFFFF00);
         this._scene.add(this._light);
 
-        this._renderer = new THREE.WebGLRenderer({canvas});
+        this._renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: true,
+        });
         this._renderer.setSize(size.width, size.height);
         this.state = new SceneState();
         this._entities = {};  // scene entities
