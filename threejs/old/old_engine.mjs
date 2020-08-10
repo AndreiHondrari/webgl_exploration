@@ -1,20 +1,5 @@
 
-const ROTATION_RATE = 0.1;
-const ADVANCE_RATE = 1;
-const SLOW_ADVANCE_RATE = 0.1;
-const LIGHT_ADVANCE_RATE = 1;
-
-const INITIAL_CAMERA_X = 0;
-const INITIAL_CAMERA_Y = 0;
-const INITIAL_CAMERA_Z = 50;
-
-// 10, 0, 25
-const INITIAL_LIGHT_X = 10;
-const INITIAL_LIGHT_Y = 10;
-const INITIAL_LIGHT_Z = 50;
-
-const INITIAL_BOX_ROTATION_X = 0.5;
-const INITIAL_BOX_ROTATION_Y = 0.8;
+import * as THREE from '../vendor/three.module.js';
 
 
 class Size {
@@ -103,6 +88,7 @@ class AnimationEngine {
         this.state.reset = true;
         let _this = this;
 
+        // TODO: what?
         // let resetScanInterval = setInterval(function() {
         //     if (_this.state.reset )
         // }, 10);
@@ -110,7 +96,7 @@ class AnimationEngine {
 
     updateState() {
         if (!this._initializedScene) {
-            throw Error("AnimationEngine.initializeScene was not called! It must be called before calling updateState!");
+            throw new Error("AnimationEngine.initializeScene was not called! It must be called before calling updateState!");
             return;
         }
 
@@ -150,7 +136,7 @@ class AnimationEngine {
         }
 
         if (this.state.auto) {
-            this._entities['box1'].rotation.y = Math.round((this._entities['box1'].rotation.y + SLOW_ADVANCE_RATE) * 100) / 100;
+              this._entities['box1'].rotation.y = Math.round((this._entities['box1'].rotation.y + SLOW_ADVANCE_RATE) * 100) / 100;
 
             if((this._entities['box1'].rotation.y > (INITIAL_BOX_ROTATION_Y + Math.PI)) || (this._entities['box1'].rotation.y < 0)) {
                 this._entities['box1'].rotation.y = INITIAL_BOX_ROTATION_Y;
@@ -232,120 +218,5 @@ class AnimationEngine {
 }
 
 
-$(function(){
-    // canvas
-    var jqCanvas = $("#canvas");
-    var canvas = jqCanvas[0];
-    var jqWrapper = $("#canvas-wrapper");
 
-    // engine
-    let engine = new AnimationEngine(
-        canvas,
-        new Size(jqWrapper.innerWidth(), jqWrapper.innerHeight())
-    );
-
-    engine.initializeScene();
-
-    function animate() {
-        requestAnimationFrame(animate);
-        engine.updateState();
-        engine.draw();
-        updateStats();
-    };
-
-    animate();
-
-    function keyToggleBind(keyCombo, stateObject, statePropertyName, callback) {
-
-        keyboardJS.bind(keyCombo,
-            function() {
-                if (typeof(callback) !== "undefined")
-                    callback();
-                stateObject[statePropertyName] = true;
-            },
-            function() {
-                if (typeof(callback) !== "undefined")
-                    callback();
-                stateObject[statePropertyName] = false;
-            }
-        );
-
-    }
-
-    function updateStats() {
-        let cameraCoordinates = $("#camera-coordinates");
-        cameraCoordinates.text(`${engine._camera.position.x} ${engine._camera.position.y} ${engine._camera.position.z}`);
-
-        let lightCoordinates = $("#light-coordinates");
-        lightCoordinates.text(`${engine._light.position.x} ${engine._light.position.y} ${engine._light.position.z}`);
-
-        let cubeRotation = $("#cube-rotation");
-        cubeRotation.text(`${Math.round(engine._entities['box1'].rotation.x * 100) / 100} ${Math.round(engine._entities['box1'].rotation.y * 100) / 100}`);
-    }
-
-    function cancelAutoAnimate() {
-
-        if (!engine.state.reset & !engine.state.auto)
-            return;
-
-        engine.state.upActive = false;
-        engine.state.downActive = false;
-        engine.state.right = false;
-        engine.state.left = false;
-        engine.state.forward = false;
-        engine.state.backward = false;
-
-        engine.state.rotateRight = false;
-        engine.state.rotateLeft = false;
-        engine.state.rotateUp = false;
-        engine.state.rotateDown = false;
-
-        engine.state.lightUp = false;
-        engine.state.lightDown = false;
-
-        engine.state.lightLeft = false;
-        engine.state.lightRight = false;
-
-        engine.state.lightForward = false;
-        engine.state.lightBackward = false;
-
-        engine.state.reset = false;
-        engine.state.auto = false;
-    }
-
-    keyToggleBind('w', engine.state, 'forward', cancelAutoAnimate);
-    keyToggleBind('s', engine.state, 'backward', cancelAutoAnimate);
-    keyToggleBind('a', engine.state, 'left', cancelAutoAnimate);
-    keyToggleBind('d', engine.state, 'right', cancelAutoAnimate);
-
-    keyToggleBind('space', engine.state, 'up', cancelAutoAnimate);
-    keyToggleBind('c', engine.state, 'down', cancelAutoAnimate);
-
-    keyToggleBind('right', engine.state, 'rotateRight', cancelAutoAnimate);
-    keyToggleBind('left', engine.state, 'rotateLeft', cancelAutoAnimate);
-
-    keyToggleBind('up', engine.state, 'rotateUp', cancelAutoAnimate);
-    keyToggleBind('down', engine.state, 'rotateDown', cancelAutoAnimate);
-
-    keyToggleBind('numseven', engine.state, 'lightUp', cancelAutoAnimate);
-    keyToggleBind('numnine', engine.state, 'lightDown', cancelAutoAnimate);
-    keyToggleBind('numfour', engine.state, 'lightLeft', cancelAutoAnimate);
-    keyToggleBind('numsix', engine.state, 'lightRight', cancelAutoAnimate);
-    keyToggleBind('numeight', engine.state, 'lightForward', cancelAutoAnimate);
-    keyToggleBind('numtwo', engine.state, 'lightBackward', cancelAutoAnimate);
-
-    function resetAndAutoAnimate() {
-        if (engine.state.reset | engine.state.auto) {
-            cancelAutoAnimate();
-            return;
-        };
-
-        engine.resetScene(function(){
-            engine.state.auto = true;
-        });
-
-    }
-
-    keyboardJS.bind('r', resetAndAutoAnimate);
-    resetAndAutoAnimate();
-});
+export {}

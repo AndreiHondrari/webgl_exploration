@@ -1,0 +1,38 @@
+
+#canvas {
+    margin: 0 auto;
+    display: block;
+}
+
+#canvas-wrapper {
+    top: 0;
+    left: 0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.return-link {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  color: white !important;
+  line-height: 18px;
+}
+
+.return-link a {
+  color: white !important;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+.return-link a .arrow{
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+}

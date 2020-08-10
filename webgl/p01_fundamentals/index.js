@@ -5,7 +5,7 @@
 
     // check if webgl available
     if (!gl) {
-        throw Error("No WebGL available!");
+        throw new Error("No WebGL available!");
         return;
     }
 

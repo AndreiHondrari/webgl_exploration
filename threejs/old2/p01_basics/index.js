@@ -23,7 +23,6 @@ $(function(){
     camera.position.z = 100;
 
     // add a renderer
-
     var renderer = new THREE.WebGLRenderer({canvas});
     renderer.setSize(width, height);
 
