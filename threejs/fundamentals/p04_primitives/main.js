@@ -20,9 +20,6 @@ class RenderEngine {
     this.jqCanvas = $("#canvas");
     this.canvas = this.jqCanvas[0];
     this.jqWrapper = $("#canvas-wrapper");
-    this.width = this.jqWrapper.innerWidth();
-    this.height = this.jqWrapper.innerHeight();
-    console.log("CANVAS SIZE", this.width, this.height);
 
     // basic utilities
     this.clock = new THREE.Clock();
@@ -32,7 +29,6 @@ class RenderEngine {
 
     // create a renderer
     this.renderer = new THREE.WebGLRenderer({canvas: this.canvas});
-    this.renderer.setSize(this.width, this.height);
 
     // create helpers
     this.gridHelper = new THREE.GridHelper(100, 50, new THREE.Color('red'));
@@ -65,11 +61,11 @@ class RenderEngine {
       1000
     );
 
-    // place the camera at z of 100
-    const XZ = 35;
-    // this.camera.position.x = XZ;
+    // position the camera
+    const XZ = 0;
+    this.camera.position.x = XZ;
     this.camera.position.y = 75;
-    // this.camera.position.z = XZ;
+    this.camera.position.z = XZ;
 
     // controls
     this.controls = this.selectControls(CONTROLS.ORBIT);
@@ -93,9 +89,23 @@ class RenderEngine {
     }
   }
 
+  resizeRendererToDisplaySize() {
+    const canvas = this.renderer.domElement;
+    const widthChanged = canvas.width !== canvas.clientWidth;
+    const heightChanged = canvas.height !== canvas.clientHeight;
+
+    if (widthChanged || heightChanged) {
+      this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+      this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
+      this.camera.updateProjectionMatrix();
+    }
+  }
+
   render() {
     var delta = this.clock.getDelta();
     this.controls.update(delta);
+
+    this.resizeRendererToDisplaySize();
 
     // Finally render
     this.renderer.render(this.scene, this.camera);
@@ -123,7 +133,7 @@ class RenderEngine {
     const pointLight = new THREE.PointLight(0xffffff, 0.1, 500, 0);
     pointLight.position.set(30, 50, 50);
 
-    const pointLight2 = new THREE.PointLight(0xffffff, 1, 550, 1);
+    const pointLight2 = new THREE.PointLight(0xffffff, 0.1, 550, 1);
     pointLight2.position.set(-50, -50, -50);
 
     // create a box
@@ -260,7 +270,7 @@ class RenderEngine {
 
     // octahedron
     const octahedronMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0, 255, 255),
+      color: new THREE.Color(0, 20, 20),
       metalness: 0.5,
       roughness: 0.1,
     });
@@ -281,6 +291,17 @@ class RenderEngine {
     tetrahedron.position.x = -20;
     tetrahedron.position.z = -35;
 
+    // torus
+    const torusMaterial = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(5, 10, 40),
+      metalness: 0.5,
+      roughness: 0.1,
+    });
+    const torusGeometry = new THREE.TorusGeometry(5, 2, 3, 6);
+    const torus = new THREE.Mesh(torusGeometry, torusMaterial);
+    torus.position.y = DISTANCE_ABOVE_GRID;
+    torus.position.x = 20;
+    torus.position.z = -35;
 
     // post alterations
     pointLight.lookAt(box1.position);
@@ -300,6 +321,7 @@ class RenderEngine {
     this.scene.add(lathe);
     this.scene.add(octahedron);
     this.scene.add(tetrahedron);
+    this.scene.add(torus);
 
     // extra list
     this.objectsToRotate = [
@@ -314,6 +336,7 @@ class RenderEngine {
       lathe,
       octahedron,
       tetrahedron,
+      torus,
     ];
   }
 }
