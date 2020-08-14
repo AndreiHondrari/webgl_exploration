@@ -304,6 +304,7 @@ class RenderEngine {
 
     let earth, earthOrbit;
     [earth, earthOrbit] = createPlanetInOrbit(20, earthTexture);
+    earth.material.color.set("rgb(150, 150, 140)");
     earth.material.bumpMap = earthSpecularTexture;
     earth.material.displacementMap = earthSpecularTexture;
     // earth.material.normalMap = earthNormalTexture;
