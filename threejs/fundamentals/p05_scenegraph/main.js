@@ -62,13 +62,18 @@ class RenderEngine {
     );
 
     // position the camera
-    const XZ = 750;
+    const XZ = 20;
     this.camera.position.x = -XZ;
-    this.camera.position.y = 500;
+    this.camera.position.y = 20;
     this.camera.position.z = XZ;
+    // this.camera.zoom = 5;
+    this.camera.updateProjectionMatrix();
 
     // controls
     this.controls = this.selectControls(CONTROLS.ORBIT);
+    this.controls.zoom0 = 10;
+    this.controls.saveState();
+    this.controls.update();
 
     this.buildSceneGraph();
   }
@@ -181,6 +186,9 @@ class RenderEngine {
     this.rotateObject(this.objects.uranus, EARTH_ROTATION_SPEED * 0.228);
     this.rotateObject(this.objects.neptune, EARTH_ROTATION_SPEED * 0.182);
     this.rotateObject(this.objects.pluto, EARTH_ROTATION_SPEED * 0.159);
+
+    // other rotations
+    this.rotateObject(this.objects.earthClouds, -EARTH_ROTATION_SPEED);
   }
 
   buildSceneGraph() {
@@ -201,7 +209,9 @@ class RenderEngine {
     const sunTexture = loader.load('planets_textures/2k_sun.jpg');
     const mercuryTexture = loader.load('planets_textures/2k_mercury.jpg');
     const venusTexture = loader.load('planets_textures/2k_venus_surface.jpg');
-    const earthTexture = loader.load('planets_textures/2k_earth_daymap.jpg');
+    const earthTexture = loader.load('planets_textures/8k_earth_daymap.jpg');
+    const earthNormalTexture = loader.load('planets_textures/8k_earth_normal_map.tif');
+    const earthSpecularTexture = loader.load('planets_textures/8k_earth_specular_map.tif');
     const moonTexture = loader.load('planets_textures/2k_moon.jpg');
     const marsTexture = loader.load('planets_textures/2k_mars.jpg');
     const jupiterTexture = loader.load('planets_textures/2k_jupiter.jpg');
@@ -210,6 +220,7 @@ class RenderEngine {
     const uranusTexture = loader.load('planets_textures/2k_uranus.jpg');
     const neptuneTexture = loader.load('planets_textures/2k_neptune.jpg');
     const plutoTexture = loader.load('planets_textures/plutomap2k.jpg');
+    const earthCloudsTexture = loader.load('planets_textures/8k_earth_clouds.jpg');
 
     // add light
     const pointLight = new THREE.PointLight(0xffffff, 2);
@@ -293,11 +304,27 @@ class RenderEngine {
 
     let earth, earthOrbit;
     [earth, earthOrbit] = createPlanetInOrbit(20, earthTexture);
+    earth.material.bumpMap = earthSpecularTexture;
+    earth.material.displacementMap = earthSpecularTexture;
+    // earth.material.normalMap = earthNormalTexture;
 
     earthSystem.add(earthOrbit);
 
     this.objects.earth = earth;
     this.objects.earthOrbit = earthOrbit;
+
+    // earth clouds
+    let earthCloudsGeo = new THREE.SphereGeometry(21, 50, 50);
+    let earthCloudsMaterial = new THREE.MeshStandardMaterial({
+      map: earthCloudsTexture,
+      alphaMap: earthCloudsTexture,
+      transparent: true,
+    });
+    let earthClouds = new THREE.Mesh(earthCloudsGeo, earthCloudsMaterial);
+
+    earthSystem.add(earthClouds);
+
+    this.objects.earthClouds = earthClouds;
 
     // moon
     let moon, moonOrbit;
