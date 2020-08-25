@@ -165,23 +165,12 @@ class RenderEngine {
     }
   }
 
-
   buildSceneGraph() {
-    /*
-    Jupiter (69,911 km) – 1,120% the size of Earth
-    Saturn (58,232 km) – 945% the size of Earth
-    Uranus (25,362 km) – 400% the size of Earth
-    Neptune (24,622 km) – 388% the size of Earth
-    Earth (6,371 km)
-    Venus (6,052 km) – 95% the size of Earth
-    Mars (3,390 km) – 53% the size of Earth
-    Mercury (2,440 km) – 38% the size of Earth
-    */
     const self = this;
     const SPHERE_DETAIL = 100;
 
     const loader = new THREE.TextureLoader();
-    const skyboxTexture = loader.load('textures/8k_stars_milky_way.jpg');
+    const skyboxTexture = loader.load('../../textures/planets_textures/8k_stars_milky_way.jpg');
 
     // skybox
     const SKYBOX_EMISSIVE_COLOR_LEVEL = 1;
@@ -221,8 +210,8 @@ class RenderEngine {
     // this.scene.add(sphere);
 
     this.loadObjModel(
-      'models/star_wars_tie_fighter.obj',
-      'models/star_wars_tie_fighter.mtl', (loadedNode) => {
+      '../../models/star_wars_tie_fighter.obj',
+      '../../models/star_wars_tie_fighter.mtl', (loadedNode) => {
         const SHIP_SCALE = 10;
         loadedNode.scale.copy(new THREE.Vector3(SHIP_SCALE, SHIP_SCALE, SHIP_SCALE));
         self.scene.add(loadedNode);

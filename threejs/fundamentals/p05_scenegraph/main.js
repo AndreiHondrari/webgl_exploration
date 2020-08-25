@@ -205,22 +205,22 @@ class RenderEngine {
     const SPHERE_DETAIL = 100;
 
     const loader = new THREE.TextureLoader();
-    const skyboxTexture = loader.load('planets_textures/8k_stars_milky_way.jpg')
-    const sunTexture = loader.load('planets_textures/2k_sun.jpg');
-    const mercuryTexture = loader.load('planets_textures/2k_mercury.jpg');
-    const venusTexture = loader.load('planets_textures/2k_venus_surface.jpg');
-    const earthTexture = loader.load('planets_textures/8k_earth_daymap.jpg');
-    const earthNormalTexture = loader.load('planets_textures/8k_earth_normal_map.tif');
-    const earthSpecularTexture = loader.load('planets_textures/8k_earth_specular_map.tif');
-    const moonTexture = loader.load('planets_textures/2k_moon.jpg');
-    const marsTexture = loader.load('planets_textures/2k_mars.jpg');
-    const jupiterTexture = loader.load('planets_textures/2k_jupiter.jpg');
-    const saturnTexture = loader.load('planets_textures/2k_saturn.jpg');
-    const saturnRingTexture = loader.load('planets_textures/2k_saturn_ring_alpha.png');
-    const uranusTexture = loader.load('planets_textures/2k_uranus.jpg');
-    const neptuneTexture = loader.load('planets_textures/2k_neptune.jpg');
-    const plutoTexture = loader.load('planets_textures/plutomap2k.jpg');
-    const earthCloudsTexture = loader.load('planets_textures/8k_earth_clouds.jpg');
+    const skyboxTexture = loader.load('../../textures/planets_textures/8k_stars_milky_way.jpg')
+    const sunTexture = loader.load('../../textures/planets_textures/2k_sun.jpg');
+    const mercuryTexture = loader.load('../../textures/planets_textures/2k_mercury.jpg');
+    const venusTexture = loader.load('../../textures/planets_textures/2k_venus_surface.jpg');
+    const earthTexture = loader.load('../../textures/planets_textures/8k_earth_daymap.jpg');
+    const earthNormalTexture = loader.load('../../textures/planets_textures/8k_earth_normal_map.tif');
+    const earthSpecularTexture = loader.load('../../textures/planets_textures/8k_earth_specular_map.tif');
+    const moonTexture = loader.load('../../textures/planets_textures/2k_moon.jpg');
+    const marsTexture = loader.load('../../textures/planets_textures/2k_mars.jpg');
+    const jupiterTexture = loader.load('../../textures/planets_textures/2k_jupiter.jpg');
+    const saturnTexture = loader.load('../../textures/planets_textures/2k_saturn.jpg');
+    const saturnRingTexture = loader.load('../../textures/planets_textures/2k_saturn_ring_alpha.png');
+    const uranusTexture = loader.load('../../textures/planets_textures/2k_uranus.jpg');
+    const neptuneTexture = loader.load('../../textures/planets_textures/2k_neptune.jpg');
+    const plutoTexture = loader.load('../../textures/planets_textures/plutomap2k.jpg');
+    const earthCloudsTexture = loader.load('../../textures/planets_textures/8k_earth_clouds.jpg');
 
     // add light
     const pointLight = new THREE.PointLight(0xffffff, 2);
