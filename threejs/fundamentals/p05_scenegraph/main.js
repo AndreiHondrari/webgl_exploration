@@ -307,6 +307,8 @@ class RenderEngine {
     earth.material.color.set("rgb(150, 150, 140)");
     earth.material.bumpMap = earthSpecularTexture;
     earth.material.displacementMap = earthSpecularTexture;
+    earth.material.wireframe = true;
+    earth.material.displacementScale = 20;
     // earth.material.normalMap = earthNormalTexture;
 
     earthSystem.add(earthOrbit);

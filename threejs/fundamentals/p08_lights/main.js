@@ -252,9 +252,9 @@ class RenderEngine {
     this.scene.add(floor);
 
     this.loadObjModel(
-      '../../models/column_2.obj',
-      null,
-      // '../../models/column_1.mtl',
+      '../../models/column_1.obj',
+      // null,
+      '../../models/column_1.mtl',
       (loadedNode) => {
         // const SHIP_SCALE = 10;
         loadedNode.position.y -= 5;

@@ -227,15 +227,18 @@ class RenderEngine {
       bumpMap: whiteMarbleHeightTexture,
       roughnessMap: whiteMarbleRoughnessTexture,
       displacementMap: whiteMarbleHeightTexture,
-      displacementScale: 1,
+      displacementScale: 0.7,
+      displacementBias: -0.5,
       normalMap: whiteMarbleNormalTexture,
+      // wireframe: true,
     });
 
     const cobbleStoneMat = new THREE.MeshStandardMaterial({
       map: cobblestone1bcTexture,
-      
+
       displacementMap: squareMapTexture,
-      displacementScale: 1,
+      displacementScale: 10,
+      displacementBias: -10,
       side: THREE.DoubleSide,
       // wireframe:true
     });
@@ -246,19 +249,21 @@ class RenderEngine {
       map: dirt1Texture,
       bumpMap: dirt1DisplacementTexture,
       displacementMap: dirt1DisplacementTexture,
-      displacementScale: 1,
+      displacementScale: 5,
       normalMap: dirt1NormalTexture,
       normalScale: new THREE.Vector2(0.5, 0.5),
+      // wireframe: true,
     })
 
     // common
-    const boxGeo = new THREE.BoxGeometry(75, 75, 75, 100, 100, 100);
+    const boxGeo = new THREE.BoxGeometry(75, 75, 75, 200, 200, 200);
 
     // floor
     const FLOOR_SIDE = 1000;
-    const floorGeo = new THREE.BoxGeometry(FLOOR_SIDE, 2, FLOOR_SIDE);
+    const floorGeo = new THREE.PlaneGeometry(FLOOR_SIDE, FLOOR_SIDE, 500, 500);
     const floor = new THREE.Mesh(floorGeo, dirt1Material);
     floor.position.y = -100;
+    floor.rotation.x = THREE.MathUtils.degToRad(-90);
     this.scene.add(floor);
 
     // box1

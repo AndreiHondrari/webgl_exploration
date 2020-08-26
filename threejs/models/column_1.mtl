@@ -1,30 +1,24 @@
-# 3ds Max Wavefront OBJ Exporter v0.94b - (c)2007 guruware
-# File Created: 10.08.2018 06:19:58
+# Blender MTL File: 'None'
+# Material Count: 2
 
 newmtl base
-	Ns 10.0000
-	Ni 1.5000
-	d 1.0000
-	Tr 1.0000
-	Tf 1.0000 1.0000 1.0000 
-	illum 2
-	Ka 0.0000 0.0000 0.0000
-	Kd 0.5882 0.5882 0.5882
-	Ks 0.0000 0.0000 0.0000
-	Ke 0.0000 0.0000 0.0000
-	map_Ka D:\New folder 2\ттт\marble18.jpg
-	map_Kd D:\New folder 2\ттт\marble18.jpg
+Ns 10.000002
+Ka 1.000000 1.000000 1.000000
+Kd 0.588200 0.588200 0.588200
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 1
+map_Kd marble18.jpg
 
 newmtl st_tile
-	Ns 70.0000
-	Ni 1.5000
-	d 1.0000
-	Tr 1.0000
-	Tf 1.0000 1.0000 1.0000 
-	illum 2
-	Ka 0.0000 0.0000 0.0000
-	Kd 0.9765 0.9294 0.9451
-	Ks 0.6300 0.6300 0.6300
-	Ke 0.0000 0.0000 0.0000
-	map_Ka D:\New folder 2\ттт\marble18.jpg
-	map_Kd D:\New folder 2\ттт\marble18.jpg
+Ns 70.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.976500 0.929400 0.945100
+Ks 0.630000 0.630000 0.630000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd marble18.jpg
