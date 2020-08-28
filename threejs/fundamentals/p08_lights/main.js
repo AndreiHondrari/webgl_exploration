@@ -11,19 +11,20 @@ const CONTROLS = Object.freeze({
   FLY: 2,
 });
 
-const DISTANCE_ABOVE_GRID = 10;
-
-
 class RenderEngine {
 
   constructor() {
     // state
     this.objects = {};
+    this.textures = {};
+    this.models = {};
 
     // get DOM elements
     this.jqCanvas = $("#canvas");
     this.canvas = this.jqCanvas[0];
     this.jqWrapper = $("#canvas-wrapper");
+    this.splash = $(".splash");
+    this.splashProgress = $("#splash-progress");
 
     // basic utilities
     this.clock = new THREE.Clock();
@@ -32,9 +33,64 @@ class RenderEngine {
     this.scene = new THREE.Scene();
 
     // create a renderer
-    this.renderer = new THREE.WebGLRenderer({canvas: this.canvas});
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.canvas,
 
-    // create helpers
+      preserveDrawingBuffer: true,
+    });
+
+    // initialize & setup additionals
+    let loadPromise = this._initLoaders();
+    this._setupHelpers();
+    this._setupCameras();
+
+    // controls
+    this.controls = this._createControls(CONTROLS.ORBIT);
+
+    loadPromise.then(() => {
+      console.log("[ENGINE] Finished preparation");
+      console.log("[ENGINE] Build scene graph");
+      this.buildSceneGraph();
+    });
+
+    this._prepare();
+  }
+
+  _initLoaders() {
+    const thisEngine = this;
+
+    this.loadManager = new THREE.LoadingManager();
+    this.objLoader = new OBJLoader2(this.loadManager);
+    this.mtlLoader = new MTLLoader(this.loadManager);
+
+    this.textureLoader = new THREE.TextureLoader(this.loadManager);
+    this.tgaLoader = new TGALoader(this.loadManager);
+
+    this.loadManager.onStart = function(url, itemsLoaded, itemsTotal) {
+        console.log(`[LOADING_MANAGER]: Started loading "${url}"`);
+    };
+
+    this.loadManager.onProgress = function(url, itemsLoaded, itemsTotal) {
+        console.log(`[LOADING_MANAGER]: Loaded "${itemsLoaded}" of "${itemsTotal}"`);
+        if (thisEngine.splashProgress !== undefined) {
+          let progressPercentage = (itemsLoaded / itemsTotal) * 100;
+          thisEngine.splashProgress.val(progressPercentage);
+          thisEngine.splashProgress.text(`${progressPercentage}%`);
+          if (progressPercentage === 100) {
+            thisEngine.splash.hide();
+          }
+        }
+    };
+
+    return new Promise((resolveFunction) => {
+      this.loadManager.onLoad = function() {
+          console.log("[LOADING_MANAGER]: Loading completed!");
+          resolveFunction();
+      };
+    });
+  }
+
+  _setupHelpers() {
     this.gridHelper = new THREE.GridHelper(3000, 20, new THREE.Color('red'));
 
     const ARROW_LENGTH = 100;
@@ -54,7 +110,9 @@ class RenderEngine {
 
     // this.scene.add(this.gridHelper);
     this.scene.add(this.axesGroup);
+  }
 
+  _setupCameras() {
     // add a camera
     // THREE.PerspectiveCamera(fov, aspect, near, far)
     this.cameraRatio = this.width/this.height
@@ -70,22 +128,10 @@ class RenderEngine {
     this.camera.position.x = XZ;
     this.camera.position.y = 75;
     this.camera.position.z = XZ;
-
-    // controls
-    this.controls = this.selectControls(CONTROLS.ORBIT);
-
-    // loaders
-    this.objLoader = new OBJLoader2();
-    this.mtlLoader = new MTLLoader();
-
-    this.textureLoader = new THREE.TextureLoader();
-    this.tgaLoader = new TGALoader();
-
-    this.buildSceneGraph();
   }
 
   // utilities
-  selectControls(controller) {
+  _createControls(controller) {
     switch(controller) {
       case CONTROLS.ORBIT:
         return new OrbitControls(this.camera, this.canvas);
@@ -134,18 +180,18 @@ class RenderEngine {
 
       // called when resource is loaded
       function(root) {
-        console.log("Loaded successfully");
+        console.log(`[MODEL] [${objPath}] Loaded successfully`);
         callback(root);
       },
 
     	// called when loading is in progresses
     	function(xhr) {
         let loadPercentage = ( xhr.loaded / xhr.total * 100 );
-    		console.log(`${loadPercentage}% loaded`);
+    		console.log(`[MODEL] [${objPath}] ${loadPercentage}% loaded`);
     	},
     	// called when loading has errors
     	function(error) {
-    		console.log("An error happened");
+    		console.log(`[MODEL] [${objPath}] An error happened`);
     	}
     );
   }
@@ -169,31 +215,72 @@ class RenderEngine {
     }
   }
 
+  _prepare() {
+    this.loadTextures();
+    this.loadModels();
+  }
+
+  _afterPrepare() {
+    console.log("[ENGINE] Performing post-preparation!");
+    return new Promise(this.afterPrepare.bind(this));
+  }
+
+  _loadTextures() {
+    // make a promise to load all textures
+    console.log("[ENGINE] Load textures");
+    return new Promise(() => {
+      this.loadTextures();
+    });
+  }
+
+  _loadModels() {
+    // make a promise to load all models
+    console.log("[ENGINE] Load models");
+    return new Promise(() => {
+      this.loadModels();
+    });
+  }
+
+  loadTextures() {
+    const TEXTURES_DIR = "../../textures";
+
+    this.textures.skyboxTexture = this.textureLoader.load(`${TEXTURES_DIR}/planets_textures/8k_stars_milky_way.jpg`);
+
+    const WHITE_MARBLE_LOC = `${TEXTURES_DIR}/white_marble`;
+    this.textures.whiteMarbleColorTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_baseColor.tga`)
+    this.textures.whiteMarbleHeightTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_height.tga`)
+    this.textures.whiteMarbleGlossinessTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_glossiness.tga`)
+    this.textures.whiteMarbleRoughnessTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_roughness.tga`)
+    this.textures.whiteMarbleSpecularTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_specular.tga`)
+    this.textures.whiteMarbleNormalTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_normal.tga`)
+    this.textures.cobbleStoneTexture = this.tgaLoader.load(`${TEXTURES_DIR}/cobblestone/CobbleStone_03_BC.tga`);
+    const cobbleStoneDisplacementTexture = this.tgaLoader.load(`${TEXTURES_DIR}/cobblestone/CobbleStone_03_H.tga`);
+    const cobbleStoneNormalTexture = this.tgaLoader.load(`${TEXTURES_DIR}/cobblestone/CobbleStone_03_N.tga`);
+  }
+
+  loadModels() {
+    this.loadObjModel(
+      '../../models/column_1.obj',
+      '../../models/column_1.mtl',
+      (loadedNode) => {
+        this.models.column = loadedNode;
+      }
+    )
+  }
+
+  afterPrepare() {
+
+  }
+
   buildSceneGraph() {
     const self = this;
-    const SPHERE_DETAIL = 100;
-
-    const skyboxTexture = this.textureLoader.load('../../textures/planets_textures/8k_stars_milky_way.jpg');
-
-    const WHITE_MARBLE_LOC = '../../textures/white_marble';
-    const whiteMarbleColorTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_baseColor.tga`)
-    const whiteMarbleHeightTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_height.tga`)
-    const whiteMarbleGlossinessTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_glossiness.tga`)
-    const whiteMarbleRoughnessTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_roughness.tga`)
-    const whiteMarbleSpecularTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_specular.tga`)
-    const whiteMarbleNormalTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_normal.tga`)
-
-    const dirt1Texture = this.textureLoader.load('../../textures/ground/Dirt02_04_2K_Albedo.jpg');
-    const dirt1DisplacementTexture = this.textureLoader.load('../../textures/ground/Dirt02_04_2K_Displacement.png');
-    const dirt1GlossTexture = this.textureLoader.load('../../textures/ground/Dirt02_04_2K_Gloss.png');
-    const dirt1NormalTexture = this.textureLoader.load('../../textures/ground/Dirt02_04_2K_Normal.png');
 
     // skybox
     const SKYBOX_EMISSIVE_COLOR_LEVEL = 1;
     const skyboxGeometry = new THREE.SphereGeometry(50_000, 100, 100);
     const skyboxMaterial = new THREE.MeshStandardMaterial({
-      map: skyboxTexture,
-      emissiveMap: skyboxTexture,
+      map: this.textures.skyboxTexture,
+      emissiveMap: this.textures.skyboxTexture,
       emissive: new THREE.Color(
         SKYBOX_EMISSIVE_COLOR_LEVEL,
         SKYBOX_EMISSIVE_COLOR_LEVEL,
@@ -204,6 +291,18 @@ class RenderEngine {
     });
     const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
     this.scene.add(skybox);
+
+    // floor
+    const FLOOR_SIDE = 500;
+    const floorGeo = new THREE.PlaneGeometry(FLOOR_SIDE, FLOOR_SIDE, 200, 200);
+    let cobbleStoneTextureClone1 = this.textures.cobbleStoneTexture.clone();
+    cobbleStoneTextureClone1.needsUpdate = true;
+    const floorMaterial = new THREE.MeshStandardMaterial({
+      map: cobbleStoneTextureClone1,
+    });
+    const floor = new THREE.Mesh(floorGeo, floorMaterial);
+    floor.rotation.x = THREE.MathUtils.degToRad(-90);
+    this.scene.add(floor);
 
     // add light
     const pointLight = new THREE.PointLight(0xffffff, 1.5);
@@ -216,52 +315,6 @@ class RenderEngine {
     // this.scene.add(ambientLight);
     this.scene.add(pointLight);
     this.scene.add(pointLight2);
-
-    // materials
-    const cobbleStoneMat = new THREE.MeshStandardMaterial({
-      map: whiteMarbleColorTexture,
-      bumpMap: whiteMarbleHeightTexture,
-      roughnessMap: whiteMarbleRoughnessTexture,
-      normalMap: whiteMarbleNormalTexture,
-    });
-
-    const DIRT1_INT = 0.5;
-    const dirt1Material = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(DIRT1_INT, DIRT1_INT, DIRT1_INT),
-      map: dirt1Texture,
-      bumpMap: dirt1DisplacementTexture,
-      displacementMap: dirt1DisplacementTexture,
-      displacementScale: 1,
-      normalMap: dirt1NormalTexture,
-      normalScale: new THREE.Vector2(0.5, 0.5),
-    })
-
-    // ground
-    const GROUND_SIZE = 1000;
-    const groundGeo = new THREE.BoxGeometry(GROUND_SIZE, 2, GROUND_SIZE);
-    let ground = new THREE.Mesh(groundGeo, dirt1Texture);
-    ground.position.z = -100;
-    this.scene.add(ground);
-
-    // floor
-    const FLOOR_SIDE = 500;
-    const floorGeo = new THREE.BoxGeometry(FLOOR_SIDE, 2, FLOOR_SIDE);
-    const floor = new THREE.Mesh(floorGeo, cobbleStoneMat);
-    // floor.material.map.repeat = new THREE.Vector2(5, 1);
-    // floor.position.y = -100;
-    this.scene.add(floor);
-
-    this.loadObjModel(
-      '../../models/column_1.obj',
-      // null,
-      '../../models/column_1.mtl',
-      (loadedNode) => {
-        // const SHIP_SCALE = 10;
-        loadedNode.position.y -= 5;
-        // loadedNode.scale.copy(new THREE.Vector3(SHIP_SCALE, SHIP_SCALE, SHIP_SCALE));
-        self.scene.add(loadedNode);
-      }
-    )
 
   }  // END buildSceneGraph
 }
