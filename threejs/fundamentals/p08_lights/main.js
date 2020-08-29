@@ -1,118 +1,59 @@
 import * as THREE from '../../vendor/three.js/build/three.module.js';
-import { FlyControls } from '../../vendor/three.js/examples/jsm/controls/FlyControls.js';
 import { OrbitControls } from '../../vendor/three.js/examples/jsm/controls/OrbitControls.js';
-import { OBJLoader2 } from '../../vendor/three.js/examples/jsm/loaders/OBJLoader2.js';
-import { MTLLoader } from '../../vendor/three.js/examples/jsm/loaders/MTLLoader.js';
-import { TGALoader } from '../../vendor/three.js/examples/jsm/loaders/TGALoader.js';
-import { MtlObjBridge } from '../../vendor/three.js/examples/jsm/loaders/obj2/bridge/MtlObjBridge.js';
 
-const CONTROLS = Object.freeze({
-  ORBIT: 1,
-  FLY: 2,
-});
+import { AbstractRenderEngine } from '../../utils/render-engine/engine_v1.module.js';
 
-class RenderEngine {
 
-  constructor() {
-    // state
-    this.objects = {};
-    this.textures = {};
-    this.models = {};
+class RenderEngine extends AbstractRenderEngine {
 
-    // get DOM elements
-    this.jqCanvas = $("#canvas");
-    this.canvas = this.jqCanvas[0];
-    this.jqWrapper = $("#canvas-wrapper");
-    this.splash = $(".splash");
-    this.splashProgress = $("#splash-progress");
-
-    // basic utilities
-    this.clock = new THREE.Clock();
-
-    // add a scene (where we add our objects)
-    this.scene = new THREE.Scene();
-
-    // create a renderer
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
-
-      preserveDrawingBuffer: true,
-    });
-
-    // initialize & setup additionals
-    let loadPromise = this._initLoaders();
-    this._setupHelpers();
-    this._setupCameras();
-
-    // controls
-    this.controls = this._createControls(CONTROLS.ORBIT);
-
-    loadPromise.then(() => {
-      console.log("[ENGINE] Finished preparation");
-      console.log("[ENGINE] Build scene graph");
-      this.buildSceneGraph();
-    });
-
-    this._prepare();
+  preRender() {
+    var delta = this.clock.getDelta();
+    this.controls.update(delta);
   }
 
-  _initLoaders() {
-    const thisEngine = this;
+  loadTextures() {
+    const TEXTURES_DIR = "../../textures";
 
-    this.loadManager = new THREE.LoadingManager();
-    this.objLoader = new OBJLoader2(this.loadManager);
-    this.mtlLoader = new MTLLoader(this.loadManager);
+    // this.textures.skyboxTexture = this.textureLoader.load(`${TEXTURES_DIR}/planets_textures/8k_stars_milky_way.jpg`);
+    this.textures.skyboxTexture = this.cubeTextureLoader.load([
+      `${TEXTURES_DIR}/skybox1/1.png`,
+      `${TEXTURES_DIR}/skybox1/2.png`,
+      `${TEXTURES_DIR}/skybox1/3.png`,
+      `${TEXTURES_DIR}/skybox1/4.png`,
+      `${TEXTURES_DIR}/skybox1/5.png`,
+      `${TEXTURES_DIR}/skybox1/6.png`,
+    ]);
 
-    this.textureLoader = new THREE.TextureLoader(this.loadManager);
-    this.tgaLoader = new TGALoader(this.loadManager);
+    const WHITE_MARBLE_LOC = `${TEXTURES_DIR}/white_marble`;
+    this.textures.whiteMarbleColorTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_baseColor.tga`);
+    this.textures.whiteMarbleHeightTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_height.tga`);
+    this.textures.whiteMarbleNormalTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_normal.tga`);
 
-    this.loadManager.onStart = function(url, itemsLoaded, itemsTotal) {
-        console.log(`[LOADING_MANAGER]: Started loading "${url}"`);
-    };
+    this.textures.granite = this.textureLoader.load(`${TEXTURES_DIR}/marble18.jpg`);
 
-    this.loadManager.onProgress = function(url, itemsLoaded, itemsTotal) {
-        console.log(`[LOADING_MANAGER]: Loaded "${itemsLoaded}" of "${itemsTotal}"`);
-        if (thisEngine.splashProgress !== undefined) {
-          let progressPercentage = (itemsLoaded / itemsTotal) * 100;
-          thisEngine.splashProgress.val(progressPercentage);
-          thisEngine.splashProgress.text(`${progressPercentage}%`);
-          if (progressPercentage === 100) {
-            thisEngine.splash.hide();
-          }
-        }
-    };
+    this.textures.cobbleStoneTexture = this.tgaLoader.load(`${TEXTURES_DIR}/cobblestone/CobbleStone_03_BC.tga`);
+    this.textures.cobbleStoneDisplacementTexture = this.tgaLoader.load(`${TEXTURES_DIR}/cobblestone/CobbleStone_03_H.tga`);
+    this.textures.cobbleStoneNormalTexture = this.tgaLoader.load(`${TEXTURES_DIR}/cobblestone/CobbleStone_03_N.tga`);
 
-    return new Promise((resolveFunction) => {
-      this.loadManager.onLoad = function() {
-          console.log("[LOADING_MANAGER]: Loading completed!");
-          resolveFunction();
-      };
-    });
+    this.textures.tiles1Texture = this.textureLoader.load(`${TEXTURES_DIR}/tileable_1/Brick_02.png`);
+    this.textures.tiles1NormalTexture = this.textureLoader.load(`${TEXTURES_DIR}/tileable_1/Brick_02_Nrm.png`);
   }
 
-  _setupHelpers() {
-    this.gridHelper = new THREE.GridHelper(3000, 20, new THREE.Color('red'));
-
-    const ARROW_LENGTH = 100;
-    var absoluteOrigin = new THREE.Vector3(0, 0, 0);
-    var xDir = new THREE.Vector3(1, 0, 0);
-    var yDir = new THREE.Vector3(0, 1, 0);
-    var zDir = new THREE.Vector3(0, 0, 1);
-
-    var arrowX = new THREE.ArrowHelper(xDir, absoluteOrigin, ARROW_LENGTH, "red");
-    var arrowY = new THREE.ArrowHelper(yDir, absoluteOrigin, ARROW_LENGTH, "green");
-    var arrowZ = new THREE.ArrowHelper(zDir, absoluteOrigin, ARROW_LENGTH, "blue");
-
-    this.axesGroup = new THREE.Group();
-    this.axesGroup.add(arrowX);
-    this.axesGroup.add(arrowY);
-    this.axesGroup.add(arrowZ);
-
-    // this.scene.add(this.gridHelper);
-    this.scene.add(this.axesGroup);
+  loadModels() {
+    this.loadObjModel(
+      '../../models/column_1.obj',
+      '../../models/column_1.mtl',
+      (loadedNode) => {
+        this.models.column = loadedNode;
+      }
+    )
   }
 
-  _setupCameras() {
+  afterPrepare() {
+    this.controls = new OrbitControls(this.camera, this.canvas);
+  }
+
+  setupCameras() {
     // add a camera
     // THREE.PerspectiveCamera(fov, aspect, near, far)
     this.cameraRatio = this.width/this.height
@@ -130,194 +71,168 @@ class RenderEngine {
     this.camera.position.z = XZ;
   }
 
-  // utilities
-  _createControls(controller) {
-    switch(controller) {
-      case CONTROLS.ORBIT:
-        return new OrbitControls(this.camera, this.canvas);
-      case CONTROLS.FLY:
-        var flyControls = new FlyControls(this.camera, this.canvas);
-        flyControls.movementSpeed = 10;
-        flyControls.domElement = this.renderer.domElement;
-        flyControls.rollSpeed = Math.PI / 12;
-        flyControls.autoForward = false;
-        flyControls.dragToLook = true;
-        return flyControls;
-    }
-  }
-
-  resizeRendererToDisplaySize() {
-    const canvas = this.renderer.domElement;
-    const widthChanged = canvas.width !== canvas.clientWidth;
-    const heightChanged = canvas.height !== canvas.clientHeight;
-
-    if (widthChanged || heightChanged) {
-      this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-      this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
-      this.camera.updateProjectionMatrix();
-    }
-  }
-
-  render() {
-    var delta = this.clock.getDelta();
-    this.controls.update(delta);
-
-    this.resizeRendererToDisplaySize();
-
-    // Finally render
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  animate() {
-  	requestAnimationFrame(this.animate.bind(this));
-  	this.render();
-  }
-
-  loadObj(objPath, callback = function(){}) {
-    const self = this;
-    this.objLoader.load(
-      objPath,
-
-      // called when resource is loaded
-      function(root) {
-        console.log(`[MODEL] [${objPath}] Loaded successfully`);
-        callback(root);
-      },
-
-    	// called when loading is in progresses
-    	function(xhr) {
-        let loadPercentage = ( xhr.loaded / xhr.total * 100 );
-    		console.log(`[MODEL] [${objPath}] ${loadPercentage}% loaded`);
-    	},
-    	// called when loading has errors
-    	function(error) {
-    		console.log(`[MODEL] [${objPath}] An error happened`);
-    	}
-    );
-  }
-
-  loadMtl(mtlPath, callbackDone = function(){}) {
-    const self = this;
-    this.mtlLoader.load(mtlPath, (mtlParseResult) => {
-      const materials = MtlObjBridge.addMaterialsFromMtlLoader(mtlParseResult);
-      self.objLoader.addMaterials(materials);
-      callbackDone();
-    });
-  }
-
-  loadObjModel(objPath, mtlPath = null, callback = function(){}) {
-    if (mtlPath === null) {
-      this.loadObj(objPath, callback);
-    } else {
-      this.loadMtl(mtlPath, () => {
-        this.loadObj(objPath, callback);
-      });
-    }
-  }
-
-  _prepare() {
-    this.loadTextures();
-    this.loadModels();
-  }
-
-  _afterPrepare() {
-    console.log("[ENGINE] Performing post-preparation!");
-    return new Promise(this.afterPrepare.bind(this));
-  }
-
-  _loadTextures() {
-    // make a promise to load all textures
-    console.log("[ENGINE] Load textures");
-    return new Promise(() => {
-      this.loadTextures();
-    });
-  }
-
-  _loadModels() {
-    // make a promise to load all models
-    console.log("[ENGINE] Load models");
-    return new Promise(() => {
-      this.loadModels();
-    });
-  }
-
-  loadTextures() {
-    const TEXTURES_DIR = "../../textures";
-
-    this.textures.skyboxTexture = this.textureLoader.load(`${TEXTURES_DIR}/planets_textures/8k_stars_milky_way.jpg`);
-
-    const WHITE_MARBLE_LOC = `${TEXTURES_DIR}/white_marble`;
-    this.textures.whiteMarbleColorTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_baseColor.tga`)
-    this.textures.whiteMarbleHeightTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_height.tga`)
-    this.textures.whiteMarbleGlossinessTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_glossiness.tga`)
-    this.textures.whiteMarbleRoughnessTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_roughness.tga`)
-    this.textures.whiteMarbleSpecularTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_specular.tga`)
-    this.textures.whiteMarbleNormalTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_normal.tga`)
-    this.textures.cobbleStoneTexture = this.tgaLoader.load(`${TEXTURES_DIR}/cobblestone/CobbleStone_03_BC.tga`);
-    const cobbleStoneDisplacementTexture = this.tgaLoader.load(`${TEXTURES_DIR}/cobblestone/CobbleStone_03_H.tga`);
-    const cobbleStoneNormalTexture = this.tgaLoader.load(`${TEXTURES_DIR}/cobblestone/CobbleStone_03_N.tga`);
-  }
-
-  loadModels() {
-    this.loadObjModel(
-      '../../models/column_1.obj',
-      '../../models/column_1.mtl',
-      (loadedNode) => {
-        this.models.column = loadedNode;
-      }
-    )
-  }
-
-  afterPrepare() {
-
-  }
-
   buildSceneGraph() {
-    const self = this;
+    const thisEngine = this;
+
+    const HALL_LENGTH = 900;
+    const HALL_WIDTH = 500;
+    const HALL_HEIGHT = 200;
 
     // skybox
-    const SKYBOX_EMISSIVE_COLOR_LEVEL = 1;
-    const skyboxGeometry = new THREE.SphereGeometry(50_000, 100, 100);
-    const skyboxMaterial = new THREE.MeshStandardMaterial({
-      map: this.textures.skyboxTexture,
-      emissiveMap: this.textures.skyboxTexture,
-      emissive: new THREE.Color(
-        SKYBOX_EMISSIVE_COLOR_LEVEL,
-        SKYBOX_EMISSIVE_COLOR_LEVEL,
-        SKYBOX_EMISSIVE_COLOR_LEVEL,
-      ),
-      emissiveIntensity: 1,
-      side: THREE.DoubleSide,
-    });
-    const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
-    this.scene.add(skybox);
+    this.scene.background = this.textures.skyboxTexture;
+    // const SKYBOX_EMISSIVE_COLOR_LEVEL = 1;
+    // const SKYBOX_SIZE = 50_000;
+    // const skyboxGeometry = new THREE.BoxBufferGeometry(SKYBOX_SIZE, SKYBOX_SIZE, SKYBOX_SIZE);
+    // const skyboxMaterial = new THREE.MeshStandardMaterial({
+    //   map: this.textures.skyboxTexture,
+    //   emissiveMap: this.textures.skyboxTexture,
+    //   emissive: new THREE.Color(
+    //     SKYBOX_EMISSIVE_COLOR_LEVEL,
+    //     SKYBOX_EMISSIVE_COLOR_LEVEL,
+    //     SKYBOX_EMISSIVE_COLOR_LEVEL,
+    //   ),
+    //   emissiveIntensity: 1,
+    //   side: THREE.DoubleSide,
+    // });
+    // const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
+    // this.scene.add(skybox);
+
+    function prepTextureClone(originalTexture, repeatParams) {
+      let clonedTexture = originalTexture.clone();
+      clonedTexture.wrapS = THREE.RepeatWrapping;
+      clonedTexture.wrapT = THREE.RepeatWrapping;
+      clonedTexture.magFilter = THREE.NearestFilter;
+      clonedTexture.repeat.set(...repeatParams);
+      clonedTexture.needsUpdate = true;
+      return clonedTexture;
+    }
 
     // floor
-    const FLOOR_SIDE = 500;
-    const floorGeo = new THREE.PlaneGeometry(FLOOR_SIDE, FLOOR_SIDE, 200, 200);
-    let cobbleStoneTextureClone1 = this.textures.cobbleStoneTexture.clone();
-    cobbleStoneTextureClone1.needsUpdate = true;
-    const floorMaterial = new THREE.MeshStandardMaterial({
-      map: cobbleStoneTextureClone1,
+    const floorGeo = new THREE.PlaneBufferGeometry(HALL_LENGTH, HALL_WIDTH, 1, 1);
+
+    let floorTextRepeatParams = [10, 8];
+
+    let whiteMarbleFloorTexture = prepTextureClone(thisEngine.textures.whiteMarbleColorTexture, floorTextRepeatParams);
+    let whiteMarbleDisplacementFloorTexture = prepTextureClone(thisEngine.textures.whiteMarbleHeightTexture, floorTextRepeatParams);
+    let whiteMarbleNormalFloorTexture = prepTextureClone(thisEngine.textures.whiteMarbleNormalTexture, floorTextRepeatParams);
+
+    const floorMaterial = new THREE.MeshPhongMaterial({
+      map: whiteMarbleFloorTexture,
+      shininess: 200,
+      normalMap: whiteMarbleNormalFloorTexture,
     });
     const floor = new THREE.Mesh(floorGeo, floorMaterial);
     floor.rotation.x = THREE.MathUtils.degToRad(-90);
     this.scene.add(floor);
 
-    // add light
-    const pointLight = new THREE.PointLight(0xffffff, 1.5);
-    const pointLight2 = new THREE.PointLight(0xffffff, 1);
-    const PLDIST = 100;
-    pointLight.position.set(PLDIST, PLDIST, PLDIST);
-    pointLight2.position.set(100, 100, -100);
-    const ambientLight = new THREE.AmbientLight(0xa0a0a0, 1);
+    // --- WALLS ---
+    function makeWall(planeParams, textureRepeatParams, displacementScale) {
+      const wallGeo = new THREE.PlaneBufferGeometry(...planeParams);
 
-    // this.scene.add(ambientLight);
+      let cobbleStoneWallTexture = prepTextureClone(thisEngine.textures.cobbleStoneTexture, textureRepeatParams);
+      let cobbleStoneDisplacementWallTexture = prepTextureClone(thisEngine.textures.cobbleStoneDisplacementTexture, textureRepeatParams);
+      let cobbleStoneNormalWallTexture = prepTextureClone(thisEngine.textures.cobbleStoneNormalTexture, textureRepeatParams);
+
+      const wallMaterial = new THREE.MeshStandardMaterial({
+        map: cobbleStoneWallTexture,
+        displacementMap: cobbleStoneDisplacementWallTexture,
+        displacementScale: displacementScale,
+        normalMap: cobbleStoneNormalWallTexture,
+      });
+      return new THREE.Mesh(wallGeo, wallMaterial);
+    }
+
+    // wall right
+    let wallRight = makeWall(
+      [HALL_LENGTH, HALL_HEIGHT, 600, 200],
+      [5, 3],
+      0.25
+    );
+    wallRight.position.y += HALL_HEIGHT / 2;
+    wallRight.position.z -= HALL_WIDTH / 2;
+    this.scene.add(wallRight);
+
+    // wall left
+    let wallLeft = makeWall(
+      [HALL_LENGTH, HALL_HEIGHT, 600, 200],
+      [5, 3],
+      0.25
+    );
+    wallLeft.rotation.y = THREE.MathUtils.degToRad(180);
+    wallLeft.position.y += HALL_HEIGHT / 2;
+    wallLeft.position.z += HALL_WIDTH / 2;
+    this.scene.add(wallLeft);
+
+    // ceiling
+    const ceilingGeo = new THREE.PlaneBufferGeometry(HALL_LENGTH, HALL_WIDTH, 600, 200);
+    let ceilingTexture = prepTextureClone(this.textures.tiles1Texture, [7, 5]);
+    let ceilingNormalTexture = prepTextureClone(this.textures.tiles1NormalTexture, [7, 5]);
+
+    const ceilingMaterial = new THREE.MeshPhongMaterial({
+      map: ceilingTexture,
+      normalMap: ceilingNormalTexture,
+      shininess: 200,
+    });
+    let ceiling = new THREE.Mesh(ceilingGeo, ceilingMaterial);
+    ceiling.rotation.x = THREE.MathUtils.degToRad(90);
+    ceiling.position.y += HALL_HEIGHT * 0.91;
+    this.scene.add(ceiling);
+
+    // --- COLUMNS ---
+    const NUMBER_OF_COLS = 14;
+    const NUMBER_OF_SPACES_BTWN_COLS = NUMBER_OF_COLS + 1;
+    const COL_SPACE = HALL_LENGTH / NUMBER_OF_SPACES_BTWN_COLS;
+    const COL_SCALE = 0.3;
+
+    // left columns
+    for (let i = 1; i <= NUMBER_OF_COLS; ++i) {
+      let columnClone = thisEngine.models.column.clone();
+      columnClone.position.z += (HALL_WIDTH / 2) * 0.75;
+      columnClone.position.x += -(HALL_LENGTH / 2) + COL_SPACE * i;
+      columnClone.scale.copy(new THREE.Vector3(COL_SCALE, COL_SCALE, COL_SCALE));
+      thisEngine.scene.add(columnClone);
+    }
+
+    for (let i = 1; i <= NUMBER_OF_COLS; ++i) {
+      let columnClone = thisEngine.models.column.clone();
+      columnClone.position.z += (HALL_WIDTH / 2) * 0.45;
+      columnClone.position.x += -(HALL_LENGTH / 2) + COL_SPACE * i;
+      columnClone.scale.copy(new THREE.Vector3(COL_SCALE, COL_SCALE, COL_SCALE));
+      thisEngine.scene.add(columnClone);
+    }
+
+    // right columns
+    for (let i = 1; i <= NUMBER_OF_COLS; ++i) {
+      let columnClone = thisEngine.models.column.clone();
+      columnClone.position.z -= (HALL_WIDTH / 2) * 0.45;
+      columnClone.position.x += -(HALL_LENGTH / 2) + COL_SPACE * i;
+      columnClone.scale.copy(new THREE.Vector3(COL_SCALE, COL_SCALE, COL_SCALE));
+      thisEngine.scene.add(columnClone);
+    }
+
+    for (let i = 1; i <= NUMBER_OF_COLS; ++i) {
+      let columnClone = thisEngine.models.column.clone();
+      columnClone.position.z -= (HALL_WIDTH / 2) * 0.75;
+      columnClone.position.x += -(HALL_LENGTH / 2) + COL_SPACE * i;
+      columnClone.scale.copy(new THREE.Vector3(COL_SCALE, COL_SCALE, COL_SCALE));
+      thisEngine.scene.add(columnClone);
+    }
+
+    // --- LIGHTS ---
+
+    // lights
+    const PLDIST = 100;
+
+    const pointLight = new THREE.PointLight(0xffffff, 0.5);
+    pointLight.position.set(PLDIST, PLDIST, PLDIST);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(100, 25, 0);
+
     this.scene.add(pointLight);
-    this.scene.add(pointLight2);
+    this.scene.add(directionalLight);
 
   }  // END buildSceneGraph
 }
 
 const engine = new RenderEngine();
-engine.animate();
