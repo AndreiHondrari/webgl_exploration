@@ -1,10 +1,9 @@
-import * as THREE from '../../vendor/three.js/build/three.module.js';
-import { FlyControls } from '../../vendor/three.js/examples/jsm/controls/FlyControls.js';
-import { OrbitControls } from '../../vendor/three.js/examples/jsm/controls/OrbitControls.js';
-import { OBJLoader2 } from '../../vendor/three.js/examples/jsm/loaders/OBJLoader2.js';
-import { MTLLoader } from '../../vendor/three.js/examples/jsm/loaders/MTLLoader.js';
-import { TGALoader } from '../../vendor/three.js/examples/jsm/loaders/TGALoader.js';
-import { MtlObjBridge } from '../../vendor/three.js/examples/jsm/loaders/obj2/bridge/MtlObjBridge.js';
+import * as THREE from "../../vendor/three.js/build/three.module.js";
+import { FlyControls } from "../../vendor/three.js/examples/jsm/controls/FlyControls.js";
+import { OrbitControls } from "../../vendor/three.js/examples/jsm/controls/OrbitControls.js";
+import { OBJLoader } from "../../vendor/three.js/examples/jsm/loaders/OBJLoader.js";
+import { MTLLoader } from "../../vendor/three.js/examples/jsm/loaders/MTLLoader.js";
+import { TGALoader } from "../../vendor/three.js/examples/jsm/loaders/TGALoader.js";
 
 const CONTROLS = Object.freeze({
   ORBIT: 1,
@@ -13,9 +12,7 @@ const CONTROLS = Object.freeze({
 
 const DISTANCE_ABOVE_GRID = 10;
 
-
 class RenderEngine {
-
   constructor() {
     // state
     this.objects = {};
@@ -32,10 +29,10 @@ class RenderEngine {
     this.scene = new THREE.Scene();
 
     // create a renderer
-    this.renderer = new THREE.WebGLRenderer({canvas: this.canvas});
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
 
     // create helpers
-    this.gridHelper = new THREE.GridHelper(3000, 20, new THREE.Color('red'));
+    this.gridHelper = new THREE.GridHelper(3000, 20, new THREE.Color("red"));
 
     const ARROW_LENGTH = 100;
     var absoluteOrigin = new THREE.Vector3(0, 0, 0);
@@ -43,9 +40,24 @@ class RenderEngine {
     var yDir = new THREE.Vector3(0, 1, 0);
     var zDir = new THREE.Vector3(0, 0, 1);
 
-    var arrowX = new THREE.ArrowHelper(xDir, absoluteOrigin, ARROW_LENGTH, "red");
-    var arrowY = new THREE.ArrowHelper(yDir, absoluteOrigin, ARROW_LENGTH, "green");
-    var arrowZ = new THREE.ArrowHelper(zDir, absoluteOrigin, ARROW_LENGTH, "blue");
+    var arrowX = new THREE.ArrowHelper(
+      xDir,
+      absoluteOrigin,
+      ARROW_LENGTH,
+      "red",
+    );
+    var arrowY = new THREE.ArrowHelper(
+      yDir,
+      absoluteOrigin,
+      ARROW_LENGTH,
+      "green",
+    );
+    var arrowZ = new THREE.ArrowHelper(
+      zDir,
+      absoluteOrigin,
+      ARROW_LENGTH,
+      "blue",
+    );
 
     this.axesGroup = new THREE.Group();
     this.axesGroup.add(arrowX);
@@ -57,12 +69,12 @@ class RenderEngine {
 
     // add a camera
     // THREE.PerspectiveCamera(fov, aspect, near, far)
-    this.cameraRatio = this.width/this.height
+    this.cameraRatio = this.width / this.height;
     this.camera = new THREE.PerspectiveCamera(
       75,
       this.cameraRatio,
       0.1,
-      1_000_000
+      1_000_000,
     );
 
     // position the camera
@@ -75,7 +87,7 @@ class RenderEngine {
     this.controls = this.selectControls(CONTROLS.ORBIT);
 
     // loaders
-    this.objLoader = new OBJLoader2();
+    this.objLoader = new OBJLoader();
     this.mtlLoader = new MTLLoader();
 
     this.textureLoader = new THREE.TextureLoader();
@@ -86,7 +98,7 @@ class RenderEngine {
 
   // utilities
   selectControls(controller) {
-    switch(controller) {
+    switch (controller) {
       case CONTROLS.ORBIT:
         return new OrbitControls(this.camera, this.canvas);
       case CONTROLS.FLY:
@@ -123,43 +135,41 @@ class RenderEngine {
   }
 
   animate() {
-  	requestAnimationFrame(this.animate.bind(this));
-  	this.render();
+    requestAnimationFrame(this.animate.bind(this));
+    this.render();
   }
 
-  loadObj(objPath, callback = function(){}) {
+  loadObj(objPath, callback = function () {}) {
     const self = this;
     this.objLoader.load(
       objPath,
-
       // called when resource is loaded
-      function(root) {
+      function (root) {
         console.log("Loaded successfully");
         callback(root);
       },
-
-    	// called when loading is in progresses
-    	function(xhr) {
-        let loadPercentage = ( xhr.loaded / xhr.total * 100 );
-    		console.log(`${loadPercentage}% loaded`);
-    	},
-    	// called when loading has errors
-    	function(error) {
-    		console.log("An error happened");
-    	}
+      // called when loading is in progresses
+      function (xhr) {
+        let loadPercentage = (xhr.loaded / xhr.total * 100);
+        console.log(`${loadPercentage}% loaded`);
+      },
+      // called when loading has errors
+      function (error) {
+        console.log("An error happened");
+      },
     );
   }
 
-  loadMtl(mtlPath, callbackDone = function(){}) {
+  loadMtl(mtlPath, callbackDone = function () {}) {
     const self = this;
-    this.mtlLoader.load(mtlPath, (mtlParseResult) => {
-      const materials = MtlObjBridge.addMaterialsFromMtlLoader(mtlParseResult);
-      self.objLoader.addMaterials(materials);
+    this.mtlLoader.load(mtlPath, (materials) => {
+      materials.preload();
+      self.objLoader.setMaterials(materials);
       callbackDone();
     });
   }
 
-  loadObjModel(objPath, mtlPath = null, callback = function(){}) {
+  loadObjModel(objPath, mtlPath = null, callback = function () {}) {
     if (mtlPath === null) {
       this.loadObj(objPath, callback);
     } else {
@@ -173,24 +183,50 @@ class RenderEngine {
     const self = this;
     const SPHERE_DETAIL = 100;
 
-    const skyboxTexture = this.textureLoader.load('../../textures/planets_textures/8k_stars_milky_way.jpg');
+    const skyboxTexture = this.textureLoader.load(
+      "../../textures/planets_textures/8k_stars_milky_way.jpg",
+    );
 
-    const WHITE_MARBLE_LOC = '../../textures/white_marble';
-    const whiteMarbleColorTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_baseColor.tga`)
-    const whiteMarbleHeightTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_height.tga`)
-    const whiteMarbleGlossinessTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_glossiness.tga`)
-    const whiteMarbleRoughnessTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_roughness.tga`)
-    const whiteMarbleSpecularTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_specular.tga`)
-    const whiteMarbleNormalTexture = this.tgaLoader.load(`${WHITE_MARBLE_LOC}/white_marble_03_2k_normal.tga`)
+    const WHITE_MARBLE_LOC = "../../textures/white_marble";
+    const whiteMarbleColorTexture = this.tgaLoader.load(
+      `${WHITE_MARBLE_LOC}/white_marble_03_2k_baseColor.tga`,
+    );
+    const whiteMarbleHeightTexture = this.tgaLoader.load(
+      `${WHITE_MARBLE_LOC}/white_marble_03_2k_height.tga`,
+    );
+    const whiteMarbleGlossinessTexture = this.tgaLoader.load(
+      `${WHITE_MARBLE_LOC}/white_marble_03_2k_glossiness.tga`,
+    );
+    const whiteMarbleRoughnessTexture = this.tgaLoader.load(
+      `${WHITE_MARBLE_LOC}/white_marble_03_2k_roughness.tga`,
+    );
+    const whiteMarbleSpecularTexture = this.tgaLoader.load(
+      `${WHITE_MARBLE_LOC}/white_marble_03_2k_specular.tga`,
+    );
+    const whiteMarbleNormalTexture = this.tgaLoader.load(
+      `${WHITE_MARBLE_LOC}/white_marble_03_2k_normal.tga`,
+    );
 
-    const cobblestone1bcTexture = this.tgaLoader.load('../../textures/cobblestone/CobbleStone_01_BC.tga');
+    const cobblestone1bcTexture = this.tgaLoader.load(
+      "../../textures/cobblestone/CobbleStone_01_BC.tga",
+    );
 
-    const dirt1Texture = this.textureLoader.load('../../textures/ground/Dirt02_04_2K_Albedo.jpg');
-    const dirt1DisplacementTexture = this.textureLoader.load('../../textures/ground/Dirt02_04_2K_Displacement.png');
-    const dirt1GlossTexture = this.textureLoader.load('../../textures/ground/Dirt02_04_2K_Gloss.png');
-    const dirt1NormalTexture = this.textureLoader.load('../../textures/ground/Dirt02_04_2K_Normal.png');
+    const dirt1Texture = this.textureLoader.load(
+      "../../textures/ground/Dirt02_04_2K_Albedo.jpg",
+    );
+    const dirt1DisplacementTexture = this.textureLoader.load(
+      "../../textures/ground/Dirt02_04_2K_Displacement.png",
+    );
+    const dirt1GlossTexture = this.textureLoader.load(
+      "../../textures/ground/Dirt02_04_2K_Gloss.png",
+    );
+    const dirt1NormalTexture = this.textureLoader.load(
+      "../../textures/ground/Dirt02_04_2K_Normal.png",
+    );
 
-    const squareMapTexture = this.textureLoader.load('../../textures/square_map.png');
+    const squareMapTexture = this.textureLoader.load(
+      "../../textures/square_map.png",
+    );
 
     // skybox
     const SKYBOX_EMISSIVE_COLOR_LEVEL = 1;
@@ -253,7 +289,7 @@ class RenderEngine {
       normalMap: dirt1NormalTexture,
       normalScale: new THREE.Vector2(0.5, 0.5),
       // wireframe: true,
-    })
+    });
 
     // common
     const boxGeo = new THREE.BoxGeometry(75, 75, 75, 200, 200, 200);
@@ -280,7 +316,7 @@ class RenderEngine {
     const sphereGeo = new THREE.SphereGeometry(50, 100, 100);
     const sphereMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(255, 255, 255),
-      wireframe: true
+      wireframe: true,
     });
     let sphere = new THREE.Mesh(sphereGeo, whiteMarbleMat);
     // sphere.position.z = 100;
@@ -292,8 +328,7 @@ class RenderEngine {
     plane.rotation.y = THREE.MathUtils.degToRad(90);
     plane.position.y = 120;
     this.scene.add(plane);
-
-  }  // END buildSceneGraph
+  } // END buildSceneGraph
 }
 
 const engine = new RenderEngine();

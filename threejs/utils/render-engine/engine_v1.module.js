@@ -1,12 +1,9 @@
-import * as THREE from '../../vendor/three.js/build/three.module.js';
-import { OBJLoader2 } from '../../vendor/three.js/examples/jsm/loaders/OBJLoader2.js';
-import { MTLLoader } from '../../vendor/three.js/examples/jsm/loaders/MTLLoader.js';
-import { TGALoader } from '../../vendor/three.js/examples/jsm/loaders/TGALoader.js';
-import { MtlObjBridge } from '../../vendor/three.js/examples/jsm/loaders/obj2/bridge/MtlObjBridge.js';
-
+import * as THREE from "../../vendor/three.js/build/three.module.js";
+import { OBJLoader } from "../../vendor/three.js/examples/jsm/loaders/OBJLoader.js";
+import { MTLLoader } from "../../vendor/three.js/examples/jsm/loaders/MTLLoader.js";
+import { TGALoader } from "../../vendor/three.js/examples/jsm/loaders/TGALoader.js";
 
 class AbstractRenderEngine {
-
   constructor() {
     // state
     this.objects = {};
@@ -67,39 +64,41 @@ class AbstractRenderEngine {
     const thisEngine = this;
 
     this.loadManager = new THREE.LoadingManager();
-    this.objLoader = new OBJLoader2(this.loadManager);
+    this.objLoader = new OBJLoader(this.loadManager);
     this.mtlLoader = new MTLLoader(this.loadManager);
 
     this.textureLoader = new THREE.TextureLoader(this.loadManager);
     this.tgaLoader = new TGALoader(this.loadManager);
     this.cubeTextureLoader = new THREE.CubeTextureLoader(this.loadManager);
 
-    this.loadManager.onStart = function(url, itemsLoaded, itemsTotal) {
-        console.log(`[LOADING_MANAGER]: Started loading "${url}"`);
+    this.loadManager.onStart = function (url, itemsLoaded, itemsTotal) {
+      console.log(`[LOADING_MANAGER]: Started loading "${url}"`);
     };
 
-    this.loadManager.onProgress = function(url, itemsLoaded, itemsTotal) {
-        console.log(`[LOADING_MANAGER]: Loaded "${itemsLoaded}" of "${itemsTotal}"`);
-        if (thisEngine.splashProgress !== undefined) {
-          let progressPercentage = (itemsLoaded / itemsTotal) * 100;
-          thisEngine.splashProgress.val(progressPercentage);
-          thisEngine.splashProgress.text(`${progressPercentage}%`);
-          if (progressPercentage === 100) {
-            thisEngine.splash.hide();
-          }
+    this.loadManager.onProgress = function (url, itemsLoaded, itemsTotal) {
+      console.log(
+        `[LOADING_MANAGER]: Loaded "${itemsLoaded}" of "${itemsTotal}"`,
+      );
+      if (thisEngine.splashProgress !== undefined) {
+        let progressPercentage = (itemsLoaded / itemsTotal) * 100;
+        thisEngine.splashProgress.val(progressPercentage);
+        thisEngine.splashProgress.text(`${progressPercentage}%`);
+        if (progressPercentage === 100) {
+          thisEngine.splash.hide();
         }
+      }
     };
 
     return new Promise((resolveFunction) => {
-      this.loadManager.onLoad = function() {
-          console.log("[LOADING_MANAGER]: Loading completed!");
-          resolveFunction();
+      this.loadManager.onLoad = function () {
+        console.log("[LOADING_MANAGER]: Loading completed!");
+        resolveFunction();
       };
     });
   }
 
   _setupHelpers() {
-    this.gridHelper = new THREE.GridHelper(3000, 20, new THREE.Color('red'));
+    this.gridHelper = new THREE.GridHelper(3000, 20, new THREE.Color("red"));
 
     const ARROW_LENGTH = 100;
     var absoluteOrigin = new THREE.Vector3(0, 0, 0);
@@ -107,9 +106,24 @@ class AbstractRenderEngine {
     var yDir = new THREE.Vector3(0, 1, 0);
     var zDir = new THREE.Vector3(0, 0, 1);
 
-    var arrowX = new THREE.ArrowHelper(xDir, absoluteOrigin, ARROW_LENGTH, "red");
-    var arrowY = new THREE.ArrowHelper(yDir, absoluteOrigin, ARROW_LENGTH, "green");
-    var arrowZ = new THREE.ArrowHelper(zDir, absoluteOrigin, ARROW_LENGTH, "blue");
+    var arrowX = new THREE.ArrowHelper(
+      xDir,
+      absoluteOrigin,
+      ARROW_LENGTH,
+      "red",
+    );
+    var arrowY = new THREE.ArrowHelper(
+      yDir,
+      absoluteOrigin,
+      ARROW_LENGTH,
+      "green",
+    );
+    var arrowZ = new THREE.ArrowHelper(
+      zDir,
+      absoluteOrigin,
+      ARROW_LENGTH,
+      "blue",
+    );
 
     this.axesGroup = new THREE.Group();
     this.axesGroup.add(arrowX);
@@ -133,56 +147,56 @@ class AbstractRenderEngine {
   }
 
   render() {
-    if (this.preRender !== undefined)
+    if (this.preRender !== undefined) {
       this.preRender();
+    }
 
     this.resizeRendererToDisplaySize();
 
     // Finally render
     this.renderer.render(this.scene, this.camera);
 
-    if (this.postRender !== undefined)
+    if (this.postRender !== undefined) {
       this.postRender();
+    }
   }
 
   animate() {
-  	requestAnimationFrame(this.animate.bind(this));
-  	this.render();
+    requestAnimationFrame(this.animate.bind(this));
+    this.render();
   }
 
-  loadObj(objPath, callback = function(){}) {
+  loadObj(objPath, callback = function () {}) {
     const self = this;
     this.objLoader.load(
       objPath,
-
       // called when resource is loaded
-      function(root) {
+      function (root) {
         console.log(`[MODEL] [${objPath}] Loaded successfully`);
         callback(root);
       },
-
-    	// called when loading is in progresses
-    	function(xhr) {
-        let loadPercentage = ( xhr.loaded / xhr.total * 100 );
-    		console.log(`[MODEL] [${objPath}] ${loadPercentage}% loaded`);
-    	},
-    	// called when loading has errors
-    	function(error) {
-    		console.log(`[MODEL] [${objPath}] An error happened`);
-    	}
+      // called when loading is in progresses
+      function (xhr) {
+        let loadPercentage = (xhr.loaded / xhr.total * 100);
+        console.log(`[MODEL] [${objPath}] ${loadPercentage}% loaded`);
+      },
+      // called when loading has errors
+      function (error) {
+        console.log(`[MODEL] [${objPath}] An error happened`);
+      },
     );
   }
 
-  loadMtl(mtlPath, callbackDone = function(){}) {
+  loadMtl(mtlPath, callbackDone = function () {}) {
     const self = this;
-    this.mtlLoader.load(mtlPath, (mtlParseResult) => {
-      const materials = MtlObjBridge.addMaterialsFromMtlLoader(mtlParseResult);
-      self.objLoader.addMaterials(materials);
+    this.mtlLoader.load(mtlPath, (materials) => {
+      materials.preload();
+      self.objLoader.setMaterials(materials);
       callbackDone();
     });
   }
 
-  loadObjModel(objPath, mtlPath = null, callback = function(){}) {
+  loadObjModel(objPath, mtlPath = null, callback = function () {}) {
     if (mtlPath === null) {
       this.loadObj(objPath, callback);
     } else {

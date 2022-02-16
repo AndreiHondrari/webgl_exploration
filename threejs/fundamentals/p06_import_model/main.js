@@ -1,9 +1,8 @@
-import * as THREE from '../../vendor/three.js/build/three.module.js';
-import { FlyControls } from '../../vendor/three.js/examples/jsm/controls/FlyControls.js';
-import { OrbitControls } from '../../vendor/three.js/examples/jsm/controls/OrbitControls.js';
-import { OBJLoader2 } from '../../vendor/three.js/examples/jsm/loaders/OBJLoader2.js';
-import { MTLLoader } from '../../vendor/three.js/examples/jsm/loaders/MTLLoader.js';
-import { MtlObjBridge } from '../../vendor/three.js/examples/jsm/loaders/obj2/bridge/MtlObjBridge.js';
+import * as THREE from "../../vendor/three.js/build/three.module.js";
+import { FlyControls } from "../../vendor/three.js/examples/jsm/controls/FlyControls.js";
+import { OrbitControls } from "../../vendor/three.js/examples/jsm/controls/OrbitControls.js";
+import { OBJLoader } from "../../vendor/three.js/examples/jsm/loaders/OBJLoader.js";
+import { MTLLoader } from "../../vendor/three.js/examples/jsm/loaders/MTLLoader.js";
 
 const CONTROLS = Object.freeze({
   ORBIT: 1,
@@ -12,9 +11,7 @@ const CONTROLS = Object.freeze({
 
 const DISTANCE_ABOVE_GRID = 10;
 
-
 class RenderEngine {
-
   constructor() {
     // state
     this.objects = {};
@@ -31,10 +28,10 @@ class RenderEngine {
     this.scene = new THREE.Scene();
 
     // create a renderer
-    this.renderer = new THREE.WebGLRenderer({canvas: this.canvas});
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
 
     // create helpers
-    this.gridHelper = new THREE.GridHelper(3000, 20, new THREE.Color('red'));
+    this.gridHelper = new THREE.GridHelper(3000, 20, new THREE.Color("red"));
 
     const ARROW_LENGTH = 500;
     var absoluteOrigin = new THREE.Vector3(0, 0, 0);
@@ -42,9 +39,24 @@ class RenderEngine {
     var yDir = new THREE.Vector3(0, 1, 0);
     var zDir = new THREE.Vector3(0, 0, 1);
 
-    var arrowX = new THREE.ArrowHelper(xDir, absoluteOrigin, ARROW_LENGTH, "red");
-    var arrowY = new THREE.ArrowHelper(yDir, absoluteOrigin, ARROW_LENGTH, "green");
-    var arrowZ = new THREE.ArrowHelper(zDir, absoluteOrigin, ARROW_LENGTH, "blue");
+    var arrowX = new THREE.ArrowHelper(
+      xDir,
+      absoluteOrigin,
+      ARROW_LENGTH,
+      "red",
+    );
+    var arrowY = new THREE.ArrowHelper(
+      yDir,
+      absoluteOrigin,
+      ARROW_LENGTH,
+      "green",
+    );
+    var arrowZ = new THREE.ArrowHelper(
+      zDir,
+      absoluteOrigin,
+      ARROW_LENGTH,
+      "blue",
+    );
 
     this.axesGroup = new THREE.Group();
     this.axesGroup.add(arrowX);
@@ -56,12 +68,12 @@ class RenderEngine {
 
     // add a camera
     // THREE.PerspectiveCamera(fov, aspect, near, far)
-    this.cameraRatio = this.width/this.height
+    this.cameraRatio = this.width / this.height;
     this.camera = new THREE.PerspectiveCamera(
       75,
       this.cameraRatio,
       0.1,
-      1_000_000
+      1_000_000,
     );
 
     // position the camera
@@ -74,7 +86,7 @@ class RenderEngine {
     this.controls = this.selectControls(CONTROLS.ORBIT);
 
     // loaders
-    this.objLoader = new OBJLoader2();
+    this.objLoader = new OBJLoader();
     this.mtlLoader = new MTLLoader();
 
     this.buildSceneGraph();
@@ -82,7 +94,7 @@ class RenderEngine {
 
   // utilities
   selectControls(controller) {
-    switch(controller) {
+    switch (controller) {
       case CONTROLS.ORBIT:
         return new OrbitControls(this.camera, this.canvas);
       case CONTROLS.FLY:
@@ -119,43 +131,43 @@ class RenderEngine {
   }
 
   animate() {
-  	requestAnimationFrame(this.animate.bind(this));
-  	this.render();
+    requestAnimationFrame(this.animate.bind(this));
+    this.render();
   }
 
-  loadObj(objPath, callback = function(){}) {
+  loadObj(objPath, callback = function () {}) {
     const self = this;
     this.objLoader.load(
       objPath,
-
       // called when resource is loaded
-      function(root) {
+      function (root) {
         console.log("Loaded successfully");
         callback(root);
       },
-
-    	// called when loading is in progresses
-    	function(xhr) {
-        let loadPercentage = ( xhr.loaded / xhr.total * 100 );
-    		console.log(`${loadPercentage}% loaded`);
-    	},
-    	// called when loading has errors
-    	function(error) {
-    		console.log("An error happened");
-    	}
+      // called when loading is in progresses
+      function (xhr) {
+        let loadPercentage = (xhr.loaded / xhr.total * 100);
+        console.log(`${loadPercentage}% loaded`);
+      },
+      // called when loading has errors
+      function (error) {
+        console.log("An error happened");
+      },
     );
   }
 
-  loadMtl(mtlPath, callbackDone = function(){}) {
+  loadMtl(mtlPath, callbackDone = function () {}) {
     const self = this;
-    this.mtlLoader.load(mtlPath, (mtlParseResult) => {
-      const materials = MtlObjBridge.addMaterialsFromMtlLoader(mtlParseResult);
-      self.objLoader.addMaterials(materials);
+    this.mtlLoader.load(mtlPath, (materials) => {
+      materials.preload();
+
+      self.objLoader.setMaterials(materials);
+
       callbackDone();
     });
   }
 
-  loadObjModel(objPath, mtlPath = null, callback = function(){}) {
+  loadObjModel(objPath, mtlPath = null, callback = function () {}) {
     if (mtlPath === null) {
       this.loadObj(objPath, callback);
     } else {
@@ -170,7 +182,9 @@ class RenderEngine {
     const SPHERE_DETAIL = 100;
 
     const loader = new THREE.TextureLoader();
-    const skyboxTexture = loader.load('../../textures/planets_textures/8k_stars_milky_way.jpg');
+    const skyboxTexture = loader.load(
+      "../../textures/planets_textures/8k_stars_milky_way.jpg",
+    );
 
     // skybox
     const SKYBOX_EMISSIVE_COLOR_LEVEL = 1;
@@ -210,17 +224,20 @@ class RenderEngine {
     // this.scene.add(sphere);
 
     this.loadObjModel(
-      '../../models/star_wars_tie_fighter.obj',
-      '../../models/star_wars_tie_fighter.mtl', (loadedNode) => {
+      "../../models/star_wars_tie_fighter.obj",
+      "../../models/star_wars_tie_fighter.mtl",
+      (loadedNode) => {
         const SHIP_SCALE = 10;
-        loadedNode.scale.copy(new THREE.Vector3(SHIP_SCALE, SHIP_SCALE, SHIP_SCALE));
+        loadedNode.scale.copy(
+          new THREE.Vector3(SHIP_SCALE, SHIP_SCALE, SHIP_SCALE),
+        );
         self.scene.add(loadedNode);
         console.log(loadedNode);
 
         // root.material.emissive = new THREE.Color(255, 255, 255);
         self.objects.fighter = loadedNode;
-      }
-    )
+      },
+    );
   }
 }
 

@@ -1,6 +1,6 @@
-import * as THREE from '../../vendor/three.js/build/three.module.js';
-import { FlyControls } from '../../vendor/three.js/examples/jsm/controls/FlyControls.js';
-import { OrbitControls } from '../../vendor/three.js/examples/jsm/controls/OrbitControls.js';
+import * as THREE from "three";
+import { FlyControls } from "../../vendor/three.js/examples/jsm/controls/FlyControls.js";
+import { OrbitControls } from "../../vendor/three.js/examples/jsm/controls/OrbitControls.js";
 
 const CONTROLLERS = Object.freeze({
   ORBIT: 1,
@@ -9,7 +9,7 @@ const CONTROLLERS = Object.freeze({
 
 // utilities
 function selectController(controller, camera, canvas) {
-  switch(controller) {
+  switch (controller) {
     case CONTROLLERS.ORBIT:
       return new OrbitControls(camera, canvas);
     case CONTROLLERS.FLY:
@@ -38,11 +38,11 @@ var clock = new THREE.Clock();
 var scene = new THREE.Scene();
 
 // create a renderer
-var renderer = new THREE.WebGLRenderer({canvas});
+var renderer = new THREE.WebGLRenderer({ canvas });
 renderer.setSize(width, height);
 
 // create helpers
-var gridHelper = new THREE.GridHelper(100, 50, new THREE.Color('red'));
+var gridHelper = new THREE.GridHelper(100, 50, new THREE.Color("red"));
 
 const ARROW_LENGTH = 15;
 var absoluteOrigin = new THREE.Vector3(0, 0, 0);
@@ -63,9 +63,9 @@ axesGroup.add(arrowZ);
 // THREE.PerspectiveCamera(fov, aspect, near, far)
 var camera = new THREE.PerspectiveCamera(
   75,
-  width/height,
+  width / height,
   0.1,
-  1000
+  1000,
 );
 
 // controls
@@ -86,7 +86,7 @@ pointLight.position.set(10, 20, 30);
 
 // create a box
 const box1geometry = new THREE.BoxGeometry(10, 10, 10);
-const material = new THREE.MeshStandardMaterial({color: 0xfd59d7});
+const material = new THREE.MeshStandardMaterial({ color: 0xfd59d7 });
 var box1 = new THREE.Mesh(box1geometry, material);
 
 box1.position.y = 5;
@@ -109,7 +109,7 @@ function render() {
 }
 
 function animate() {
-	requestAnimationFrame( animate );
-	render();
+  requestAnimationFrame(animate);
+  render();
 }
 animate();
